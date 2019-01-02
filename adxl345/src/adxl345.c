@@ -71,8 +71,10 @@ static void gpio_init(void)
     uint32_t err_code;
     nrfx_gpiote_in_config_t cfg_in = NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
 
-    err_code = nrfx_gpiote_init();
-    APP_ERROR_CHECK(err_code);
+    if (!nrfx_gpiote_is_init()) {
+        err_code = nrfx_gpiote_init();
+        APP_ERROR_CHECK(err_code);
+    }
     err_code = nrfx_gpiote_in_init(PIN_INT1, &cfg_in, gpio_handler);
     APP_ERROR_CHECK(err_code);
 }

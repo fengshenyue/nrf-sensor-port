@@ -72,8 +72,10 @@ static void gpio_init(void)
     nrfx_gpiote_out_config_t cfg_out = NRFX_GPIOTE_CONFIG_OUT_SIMPLE(true);
     nrfx_gpiote_in_config_t cfg_in = NRFX_GPIOTE_CONFIG_IN_SENSE_HITOLO(true);
 
-    err_code = nrfx_gpiote_init();
-    APP_ERROR_CHECK(err_code);
+    if (!nrfx_gpiote_is_init()) {
+        err_code = nrfx_gpiote_init();
+        APP_ERROR_CHECK(err_code);
+    }
     err_code = nrfx_gpiote_out_init(PIN_XSHUT, &cfg_out);
     APP_ERROR_CHECK(err_code);
     err_code = nrfx_gpiote_in_init(PIN_GPIO1, &cfg_in, gpio_handler);

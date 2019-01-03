@@ -31,36 +31,35 @@
 /*************************************************************/
 /* Register Value */
 /* TMP117_DEVID */
-#define TMP117_ID_H 0x01
-#define TMP117_ID_L 0x17
+#define TMP117_ID 0x0117
 
-/* TMP117_CONFIG_H */
-#define TMP117_CFG_HIGH_ALERT 0x80
-#define TMP117_CFG_LOW_ALERT 0x40
-#define TMP117_CFG_DATA_READY 0x20
-#define TMP117_CFG_EEPROM_BUSY 0x10
-#define TMP117_CFG_MOD1 0x08
-#define TMP117_CFG_MOD0 0x04
-#define TMP117_CFG_CONV2 0x02
-#define TMP117_CFG_CONV1 0x01
-/* TMP117_CONFIG_L */
-#define TMP117_CFG_CONV0 0x80
-#define TMP117_CFG_AVG1 0x40
-#define TMP117_CFG_AVG0 0x20
-#define TMP117_CFG_TNA 0x10
-#define TMP117_CFG_POL 0x08
-#define TMP117_CFG_DRNALERT_EN 0x04
-#define TMP117_CFG_SOFT_RESET 0x02
-
-/* TMP117_EEPROM_UNLOCK_H */
-#define TMP117_ROM_EUN 0x80
-#define TMP117_ROM_BUSY 0x40
+/* TMP117_CONFIG */
+#define TMP117_CONTINUOUS_CONVERSION 0x0000
+#define TMP117_SHUTDOWM 0x0400
+#define TMP117_ONE_SHOT 0x0600
+#define TMP117_FREQ_15_5MS 0x0000
+#define TMP117_FREQ_125MS 0x0080
+#define TMP117_FREQ_250MS 0x0100
+#define TMP117_FREQ_500MS 0x0180
+#define TMP117_FREQ_1S 0x0200
+#define TMP117_FREQ_4S 0x0280
+#define TMP117_FREQ_8S 0x0300
+#define TMP117_FREQ_16S 0x0380
+#define TMP117_AVG_NO 0x0000
+#define TMP117_AVG_8 0x0020
+#define TMP117_AVG_32 0x0040
+#define TMP117_AVG_64 0x0060
+#define TMP117_MODE_THERM 0x0010
+#define TMP117_MODE_ALERT 0x0000
+#define TMP117_PIN_ACTIVE_HIGH 0x0008
+#define TMP117_PIN_ACTIVE_LOW 0x0000
+#define TMP117_PIN_DATA_READY 0x0004
+#define TMP117_PIN_ALERT 0x0000
+#define TMP117_SOFT_RESET 0x0002
 
 /*************************************************************/
-void TMP117_WriteMulti(uint8_t reg, uint8_t *p_data, uint8_t len);
-void TMP117_ReadMulti(uint8_t reg, uint8_t *p_data, uint8_t len);
-void TMP117_WrByte(uint8_t reg, uint8_t data);
-void TMP117_RdByte(uint8_t reg, uint8_t *p_data);
+void TMP117_WrReg(uint8_t reg, uint16_t data);
+void TMP117_RdReg(uint8_t reg, uint16_t *p_data);
 void TMP117_init(void);
 
 #endif // TMP117_H__

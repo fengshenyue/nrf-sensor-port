@@ -20,9 +20,9 @@
  * Modify these pins *
  * !!!!!!!!!!!!!!!!! */
 #define ADDR     TMP117_ADDR
-#define PIN_SCL  3
-#define PIN_SDA  4
-#define PIN_INT 5
+#define PIN_SCL   3
+#define PIN_SDA   4
+#define PIN_ALERT 5
 /*************************************************************/
 static nrfx_twim_t m_twim = NRFX_TWIM_INSTANCE(0);
 /*************************************************************/
@@ -44,24 +44,29 @@ static void twim_init(void)
 /*************************************************************/
 static void gpio_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
+    int16_t data;
+    float temp;
 
+    TMP117_RdReg(TMP117_TEMP, (uint16_t *)&data); // Read temperature
+    temp = (float)data*0.0078125f; // Conversion
+    NRF_LOG_INFO("Temp:" NRF_LOG_FLOAT_MARKER "C", NRF_LOG_FLOAT(temp));
 }
 
 static void gpio_enable(void)
 {
-    nrfx_gpiote_in_event_enable(PIN_INT, true);
+    nrfx_gpiote_in_event_enable(PIN_ALERT, true);
 }
 
 static void gpio_init(void)
 {
     uint32_t err_code;
-    nrfx_gpiote_in_config_t cfg_in = NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
+    nrfx_gpiote_in_config_t cfg_in = NRFX_GPIOTE_CONFIG_IN_SENSE_HITOLO(true);
 
     if (!nrfx_gpiote_is_init()) {
         err_code = nrfx_gpiote_init();
         APP_ERROR_CHECK(err_code);
     }
-    err_code = nrfx_gpiote_in_init(PIN_INT, &cfg_in, gpio_handler);
+    err_code = nrfx_gpiote_in_init(PIN_ALERT, &cfg_in, gpio_handler);
     APP_ERROR_CHECK(err_code);
 }
 /*************************************************************/
@@ -70,28 +75,43 @@ static void gpio_init(void)
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 void TMP117_init(void)
 {
-    uint8_t data;
+    uint16_t data;
 
     twim_init();
     gpio_init();
     nrf_delay_ms(2); // Wait 1.5ms at least
 
     // Secure hardware link
-    ADXL345_RdByte(ADXL345_DEVID, &data);
-    if (data == 0xE5) {
-        NRF_LOG_INFO("ADXL345 Init");
+    TMP117_RdReg(TMP117_DEVID, &data);
+    if (data == TMP117_ID) {
+        NRF_LOG_INFO("TMP117 Init");
     } else {
-        NRF_LOG_INFO("ADXL345 Error");
+        NRF_LOG_INFO("TMP117 Error");
         return;
     }
 
     // Configuration
-    ADXL345_WrByte(ADXL345_RESERVED, ADXL345_RESET); // Reset
-    nrf_delay_ms(2);
-    ADXL345_WrByte(ADXL345_BW_RATE, ADXL345_RATE_12_5);
-    ADXL345_WrByte(ADXL345_DATA_FORMAT, ADXL345_RANGE_16G|ADXL345_FULL_RES);
-    ADXL345_WrByte(ADXL345_INT_ENABLE, ADXL345_DATA_READY);
-    ADXL345_WrByte(ADXL345_POWER_CTL, ADXL345_MEASURE);
+    TMP117_WrReg(TMP117_CONFIG, TMP117_FREQ_1S|TMP117_AVG_8|TMP117_MODE_THERM|TMP117_PIN_DATA_READY);
 
+    // Enable GPIO interrupt
     gpio_enable();
+}
+
+void TMP117_WrReg(uint8_t reg, uint16_t data)
+{
+    uint8_t buffer[3];
+
+    buffer[0] = reg;
+    buffer[1] = data>>8;
+    buffer[2] = data&0x00FF;
+    nrfx_twim_tx(&m_twim, ADDR>>1, buffer, 3, false);
+}
+
+void TMP117_RdReg(uint8_t reg, uint16_t *p_data)
+{
+    uint8_t buffer[2];
+
+    nrfx_twim_tx(&m_twim, ADDR>>1, &reg, 1, false);
+    nrfx_twim_rx(&m_twim, ADDR>>1, buffer, 2);
+    *p_data = ((uint16_t)buffer[0]<<8)|(uint16_t)buffer[1];
 }
